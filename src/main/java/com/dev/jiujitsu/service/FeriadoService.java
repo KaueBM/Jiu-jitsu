@@ -1,6 +1,7 @@
 package com.dev.jiujitsu.service;
 
 import com.dev.jiujitsu.converter.FeriadoConverter;
+import com.dev.jiujitsu.domain.dto.Feriado;
 import com.dev.jiujitsu.domain.vo.FeriadosResponse;
 import com.dev.jiujitsu.external.FeriadosClient;
 import com.dev.jiujitsu.repository.FeriadoRepository;
@@ -35,6 +36,9 @@ public class FeriadoService {
     }
 
     public boolean ehFeriado(LocalDate data) {
+        Feriado feriado = repository.findTopByOrderByDataDesc();
+        if(data.isAfter(feriado.getData())) return false;
+
         return CollectionUtils.isEmpty(repository.findByData(data));
     }
 

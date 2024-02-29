@@ -176,7 +176,7 @@ public enum FaixasEnum {
                 encontrouFaixaAtual = true;
             }
 
-            if (encontrouFaixaAtual && !ehFaixaFinal(faixa) && !ehPreta(faixa)) {
+            if (encontrouFaixaAtual && !ehFaixaFinal(faixa) && !ehPreta(faixa) && faixa != faixaAtualEnum) {
                 faixasRestantes.add(faixa);
             }
         }
@@ -230,6 +230,12 @@ public enum FaixasEnum {
 
     public static boolean ehPreta(FaixasEnum faixa) {
         return faixa == PRETA;
+    }
+
+
+    public static FaixasEnum obterFaixaPorNome(String faixa){
+        return FaixasEnum.valueOf(faixa.toUpperCase());
+
     }
 
 }

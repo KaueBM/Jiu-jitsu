@@ -12,4 +12,6 @@ public interface FeriadoRepository extends MongoRepository<Feriado, String> {
 
     List<Feriado> findByData(LocalDate date);
 
+    Feriado findTopByOrderByDataDesc();
+
 }

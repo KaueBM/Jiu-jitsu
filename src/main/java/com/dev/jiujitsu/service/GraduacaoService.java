@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class GraduacaoService {
@@ -14,65 +16,59 @@ public class GraduacaoService {
     @Autowired
     private FeriadoService feriadoService;
 
-    public Graduacao buscarDatasGraduacoes(String faixa, int aulasPorSemana, int aulasFeitas, int grausRecebidos){
+    public List<Graduacao> buscarDatasGraduacoes(String faixa, int aulasPorSemana, int aulasFeitas, int grausRecebidos){
         LocalDate dataAtual = LocalDate.now();
-        FaixasEnum faixaAtual = FaixasEnum.valueOf(faixa);
+        FaixasEnum faixaAtual = FaixasEnum.obterFaixaPorNome(faixa);
         int aulasGraduacao = faixaAtual.getAulasRestantesParaProximaFaixa(grausRecebidos,aulasFeitas);
+        List<FaixasEnum> faixasRestantes = faixaAtual.buscaListaFaixasQueFaltam(faixa);
         LocalDate dataGraduacao = this.adicionarDiasUteis(dataAtual,aulasGraduacao, aulasPorSemana);
-        Graduacao resposta = new Graduacao();
-        resposta.setGraduacao(dataGraduacao);
-        resposta.setAulasFaltantes(aulasGraduacao);
-        this.preencherDatas(resposta, faixaAtual, dataAtual, grausRecebidos, aulasFeitas, aulasPorSemana);
+        List<Graduacao> graduacoes = new ArrayList<>();
+        Graduacao graduacaoAtual = new Graduacao();
+        graduacaoAtual.setFaixa(faixaAtual);
+        graduacaoAtual.setGraduacao(dataGraduacao);
+        graduacaoAtual.setAulasProxFaixa(aulasGraduacao);
+        graduacaoAtual.setAulasParaPreta(faixaAtual.getTotalAulasFaltantesPreta(grausRecebidos,aulasFeitas));
+        this.preencherDatas(graduacaoAtual, faixaAtual, dataAtual, grausRecebidos, aulasFeitas, aulasPorSemana);
+        graduacoes.add(graduacaoAtual);
+        LocalDate ultimaGraduacao = dataGraduacao;
 
-        return resposta;
+        for (FaixasEnum faixaEnum : faixasRestantes){
+            Graduacao graduacaoProxFaixa = preencheGraduacaoResposta(aulasPorSemana, faixaEnum, ultimaGraduacao);
+            ultimaGraduacao = graduacaoProxFaixa.getGraduacao();
+            graduacoes.add(graduacaoProxFaixa);
+        }
 
+        return graduacoes;
+    }
+
+    private Graduacao preencheGraduacaoResposta(int aulasPorSemana, FaixasEnum faixaEnum, LocalDate ultimaGraduacao) {
+        Graduacao graduacaoFaltante = new Graduacao();
+        graduacaoFaltante.setFaixa(faixaEnum);
+        LocalDate graduacaoProxFaixa = this.adicionarDiasUteis(ultimaGraduacao, faixaEnum.getNumeroTotalAulasGraduacao(), aulasPorSemana);
+        graduacaoFaltante.setGraduacao(graduacaoProxFaixa);
+        graduacaoFaltante.setAulasProxFaixa(faixaEnum.getNumeroTotalAulasGraduacao());
+        graduacaoFaltante.setAulasParaPreta(faixaEnum.getTotalAulasFaltantesPreta(0,0));
+        this.preencherDatas(graduacaoFaltante, faixaEnum, ultimaGraduacao, 0, 0, aulasPorSemana);
+        return graduacaoFaltante;
     }
 
     private void preencherDatas(Graduacao graduacao, FaixasEnum faixa, LocalDate dataAtual, int grauAtual, int aulasFeitas, int aulasPorSemana) {
-        if (FaixasEnum.ehPreta(faixa)) {
-            graduacao.setGraduacaoCoral(adicionarDiasUteis(dataAtual, faixa.anosParaCoral(grauAtual) * 360, 7));
-            return;
-        } else if(FaixasEnum.ehFaixaFinal(faixa)){
-            return;
-        }
-
-
+        graduacao.setGrau1(dataAtual);
+        graduacao.setGrau2(dataAtual);
+        graduacao.setGrau3(dataAtual);
         switch (grauAtual) {
             case 0:
                 graduacao.setGrau1(adicionarDiasUteis(dataAtual, faixa.getNumeroAulasGrau() -aulasFeitas, aulasPorSemana));
-                graduacao.setGrau2(adicionarDiasUteis(graduacao.getGrau1(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGrau3(adicionarDiasUteis(graduacao.getGrau2(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGrau4(adicionarDiasUteis(graduacao.getGrau3(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacao(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacaoPreta(adicionarDiasUteis(graduacao.getGrau4(), faixa.getTotalAulasFaltantesPreta(grauAtual,aulasFeitas), aulasPorSemana));
-                graduacao.setGraduacaoCoral(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                break;
             case 1:
                 graduacao.setGrau2(adicionarDiasUteis(graduacao.getGrau1(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGrau3(adicionarDiasUteis(graduacao.getGrau2(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGrau4(adicionarDiasUteis(graduacao.getGrau3(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacao(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacaoPreta(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacaoCoral(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                break;
             case 2:
                 graduacao.setGrau3(adicionarDiasUteis(graduacao.getGrau2(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGrau4(adicionarDiasUteis(graduacao.getGrau3(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacao(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacaoPreta(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacaoCoral(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                break;
             case 3:
                 graduacao.setGrau4(adicionarDiasUteis(graduacao.getGrau3(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacao(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacaoPreta(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacaoCoral(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                break;
             case 4:
                 graduacao.setGraduacao(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
-                graduacao.setGraduacaoPreta(adicionarDiasUteis(graduacao.getGrau4(), faixa.getNumeroAulasGrau(), aulasPorSemana));
+                graduacao.setGraduacaoPreta(adicionarDiasUteis(graduacao.getGraduacao(), faixa.getTotalAulasFaltantesPreta(grauAtual,aulasFeitas), aulasPorSemana));
                 graduacao.setGraduacaoCoral(graduacao.getGraduacaoPreta().plusYears(faixa.anosParaCoral(0)));
-                break;
         }
 
     }
@@ -82,7 +78,6 @@ public class GraduacaoService {
 
         while (diasAdicionados < numeroDias) {
             data = data.plusDays(1);
-
             if (ehDiaUtil(data) && !feriadoService.ehFeriado(data)) {
                 diasAdicionados++;
             }

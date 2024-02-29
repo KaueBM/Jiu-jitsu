@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name= APIConstants.FERIADOS_CLIENT_NAME, url = "${url}")
+@FeignClient(name= APIConstants.FERIADOS_CLIENT_NAME, url = "https://brasilapi.com.br/api/")
 public interface FeriadosClient {
     @GetMapping("/feriados/v1/{ano}")
     List<FeriadosResponse> getFeriados(@PathVariable int ano);
