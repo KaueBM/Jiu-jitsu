@@ -7,10 +7,11 @@ import com.dev.jiujitsu.external.FeriadosClient;
 import com.dev.jiujitsu.repository.FeriadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Service
 public class FeriadoService {
@@ -39,7 +40,7 @@ public class FeriadoService {
         Feriado feriado = repository.findTopByOrderByDataDesc();
         if(data.isAfter(feriado.getData())) return false;
 
-        return CollectionUtils.isEmpty(repository.findByData(data));
+        return !isEmpty(repository.findByData(data));
     }
 
 }

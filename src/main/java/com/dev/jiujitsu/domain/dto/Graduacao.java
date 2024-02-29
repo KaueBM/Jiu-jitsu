@@ -12,18 +12,19 @@ public class Graduacao {
     private FaixasEnum faixa;
     private int aulasProxFaixa;
     private int aulasParaPreta;
-    @JsonFormat(pattern="dd/MM/yyyy")
-    private LocalDate grau1;
-    @JsonFormat(pattern="dd/MM/yyyy")
-    private LocalDate grau2;
-    @JsonFormat(pattern="dd/MM/yyyy")
-    private LocalDate grau3;
-    @JsonFormat(pattern="dd/MM/yyyy")
-    private LocalDate grau4;
-    @JsonFormat(pattern="dd/MM/yyyy")
-    private LocalDate graduacao;
-    @JsonFormat(pattern="dd/MM/yyyy")
-    private LocalDate graduacaoPreta;
-    @JsonFormat(pattern="dd/MM/yyyy")
-    private LocalDate graduacaoCoral;
+    private Grau grau1;
+    private Grau grau2;
+    private Grau grau3;
+    private Grau grau4;
+    private Grau graduacao;
+    private Grau graduacaoPreta;
+    private Grau graduacaoCoral;
+    private Grau graduacaoVermelha;
+
+    @Data
+    public static class Grau {
+        @JsonFormat(pattern="dd/MM/yyyy")
+        private LocalDate data;
+        private String diaDaSemana;
+    }
 }

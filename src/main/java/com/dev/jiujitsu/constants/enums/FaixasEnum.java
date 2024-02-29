@@ -16,6 +16,11 @@ public enum FaixasEnum {
         }
 
         @Override
+        public int getNumeroAulasGraduacao() {
+            return 10;
+        }
+
+        @Override
         public int getAulasRestantesParaProximaFaixa(int grausRecebidos, int aulasRealizadas) {
             return this.getAulasProximaFaixa(grausRecebidos, aulasRealizadas);
         }
@@ -34,6 +39,11 @@ public enum FaixasEnum {
         @Override
         public int getNumeroTotalAulasGraduacao() {
             return 500;
+        }
+
+        @Override
+        public int getNumeroAulasGraduacao() {
+            return 100;
         }
 
         @Override
@@ -59,6 +69,11 @@ public enum FaixasEnum {
         }
 
         @Override
+        public int getNumeroAulasGraduacao() {
+            return 75;
+        }
+
+        @Override
         public int getAulasRestantesParaProximaFaixa(int grausRecebidos, int aulasRealizadas) {
             return this.getAulasProximaFaixa(grausRecebidos, aulasRealizadas);
         }
@@ -81,6 +96,11 @@ public enum FaixasEnum {
         }
 
         @Override
+        public int getNumeroAulasGraduacao() {
+            return 50;
+        }
+
+        @Override
         public int getAulasRestantesParaProximaFaixa(int grausRecebidos, int aulasRealizadas) {
             return this.getAulasProximaFaixa(grausRecebidos, aulasRealizadas);
         }
@@ -99,6 +119,11 @@ public enum FaixasEnum {
 
         @Override
         public int getNumeroTotalAulasGraduacao() {
+            return 0;
+        }
+
+        @Override
+        public int getNumeroAulasGraduacao() {
             return 0;
         }
 
@@ -125,6 +150,11 @@ public enum FaixasEnum {
         }
 
         @Override
+        public int getNumeroAulasGraduacao() {
+            return 0;
+        }
+
+        @Override
         public int getAulasRestantesParaProximaFaixa(int grausUsuario, int aulasRealizadas) {
             return 0;
         }
@@ -147,6 +177,11 @@ public enum FaixasEnum {
         }
 
         @Override
+        public int getNumeroAulasGraduacao() {
+            return 0;
+        }
+
+        @Override
         public int getAulasRestantesParaProximaFaixa(int grausUsuario, int aulasRealizadas) {
             return 0;
         }
@@ -160,6 +195,8 @@ public enum FaixasEnum {
     public abstract int getNumeroAulasGrau();
 
     public abstract int getNumeroTotalAulasGraduacao();
+
+    public abstract int getNumeroAulasGraduacao();
 
     public abstract int getAulasRestantesParaProximaFaixa(int grausUsuario, int aulasRealizadas);
 
@@ -185,6 +222,16 @@ public enum FaixasEnum {
     }
 
     public int anosParaCoral(int grauAtual) {
+        int totalAnos = 0;
+
+        for (int grau = 0; grau < 6 - grauAtual; grau++) {
+            totalAnos += anosGrau(grau);
+        }
+
+        return totalAnos;
+    }
+
+    public int anosParaVermelha(int grauAtual) {
         int totalAnos = 0;
 
         for (int grau = 0; grau < 9 - grauAtual; grau++) {
