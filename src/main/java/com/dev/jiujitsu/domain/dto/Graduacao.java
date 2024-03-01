@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.Objects;
 
 @Data
 public class Graduacao {
@@ -12,19 +14,14 @@ public class Graduacao {
     private FaixasEnum faixa;
     private int aulasProxFaixa;
     private int aulasParaPreta;
-    private Grau grau1;
-    private Grau grau2;
-    private Grau grau3;
-    private Grau grau4;
-    private Grau graduacao;
-    private Grau graduacaoPreta;
-    private Grau graduacaoCoral;
-    private Grau graduacaoVermelha;
+    private Map<String, Grau> grau;
 
-    @Data
-    public static class Grau {
-        @JsonFormat(pattern="dd/MM/yyyy")
-        private LocalDate data;
-        private String diaDaSemana;
+
+    public LocalDate buscarDataGrau(String grau){
+        return Objects.isNull(this.getGrau().get(grau)) ? LocalDate.now() :this.getGrau().get(grau).getData();
+    }
+
+    public void setarDataGraduacao(String graduacao, LocalDate data){
+        this.getGrau().get(graduacao).setData(data);
     }
 }

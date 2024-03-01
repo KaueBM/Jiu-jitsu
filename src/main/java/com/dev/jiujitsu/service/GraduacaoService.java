@@ -2,13 +2,13 @@ package com.dev.jiujitsu.service;
 
 import com.dev.jiujitsu.constants.enums.FaixasEnum;
 import com.dev.jiujitsu.domain.dto.Graduacao;
+import com.dev.jiujitsu.domain.dto.Grau;
 import com.dev.jiujitsu.service.util.DataUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static java.time.LocalDate.now;
 
@@ -22,84 +22,96 @@ public class GraduacaoService {
         int aulasGraduacao = faixaAtual.getAulasRestantesParaProximaFaixa(grausRecebidos,aulasFeitas);
         LocalDate dataGraduacao = this.adicionarDiasUteis(now(),aulasGraduacao, aulasPorSemana);
         List<Graduacao> graduacoes = new ArrayList<>();
+        Map<String, Grau> grauAtual = new HashMap<>();
 
         Graduacao graduacaoAtual = new Graduacao();
         graduacaoAtual.setFaixa(faixaAtual);
-        graduacaoAtual.setGraduacao(criaGrau(dataGraduacao));
         graduacaoAtual.setAulasProxFaixa(aulasGraduacao);
         graduacaoAtual.setAulasParaPreta(faixaAtual.getTotalAulasFaltantesPreta(grausRecebidos,aulasFeitas));
-        this.preencherDatas(graduacaoAtual, now(), grausRecebidos, aulasFeitas, aulasPorSemana);
-
+        this.preencherDatas(graduacaoAtual, now(), grausRecebidos, aulasFeitas, aulasPorSemana, grauAtual, false);
         graduacoes.add(graduacaoAtual);
         LocalDate ultimaGraduacao = dataGraduacao;
 
         List<FaixasEnum> faixasRestantes = faixaAtual.buscaListaFaixasQueFaltam(faixa);
         for (FaixasEnum faixaEnum : faixasRestantes){
-            Graduacao graduacaoProxFaixa = preencheGraduacaoResposta(aulasPorSemana, faixaEnum, ultimaGraduacao);
-            ultimaGraduacao = graduacaoProxFaixa.getGraduacao().getData();
+            Map<String, Grau> grauProximo = new HashMap<>();
+            Graduacao graduacaoProxFaixa = preencheGraduacaoResposta(aulasPorSemana, faixaEnum, ultimaGraduacao, grauProximo);
+            ultimaGraduacao = graduacaoProxFaixa.buscarDataGrau("Graduação");
+            grauProximo.put("Graduação Preta", graduacaoAtual.getGrau().get("Graduação Preta"));
+            grauProximo.put("Graduação Coral",graduacaoAtual.getGrau().get("Graduação Coral"));
+            grauProximo.put("Graduação Vermelha",graduacaoAtual.getGrau().get("Graduação Vermelha"));
             graduacoes.add(graduacaoProxFaixa);
         }
 
         return graduacoes;
     }
 
-    private Graduacao preencheGraduacaoResposta(int aulasPorSemana, FaixasEnum faixaEnum, LocalDate ultimaGraduacao) {
+    private Graduacao preencheGraduacaoResposta(int aulasPorSemana, FaixasEnum faixaEnum, LocalDate ultimaGraduacao, Map<String, Grau> grau) {
         LocalDate graduacaoProxFaixa = this.adicionarDiasUteis(ultimaGraduacao, faixaEnum.getNumeroTotalAulasGraduacao(), aulasPorSemana);
         Graduacao graduacaoFaltante = new Graduacao();
 
         graduacaoFaltante.setFaixa(faixaEnum);
-        graduacaoFaltante.setGraduacao(criaGrau(graduacaoProxFaixa));
+        grau.put("Graduação",criaGrau(graduacaoProxFaixa));
         graduacaoFaltante.setAulasProxFaixa(faixaEnum.getNumeroTotalAulasGraduacao());
         graduacaoFaltante.setAulasParaPreta(faixaEnum.getTotalAulasFaltantesPreta(0,0));
-        this.preencherDatas(graduacaoFaltante, ultimaGraduacao, 0, 0, aulasPorSemana);
+        this.preencherDatas(graduacaoFaltante, ultimaGraduacao, 0, 0, aulasPorSemana, grau, true);
 
         return graduacaoFaltante;
     }
 
-    private void preencherDatas(Graduacao graduacao, LocalDate dataAtual, int grauAtual, int aulasFeitas, int aulasPorSemana) {
+    private void preencherDatas(Graduacao graduacao, LocalDate dataAtual, int grauAtual, int aulasFeitas, int aulasPorSemana, Map<String, Grau> grau, boolean proxFaixa) {
         FaixasEnum faixa = graduacao.getFaixa();
         int grauPreta = FaixasEnum.ehPreta(faixa) ? grauAtual : 0;
 
-        graduacao.setGrau1(criaGrau(dataAtual));
-        graduacao.setGrau2(criaGrau(dataAtual));
-        graduacao.setGrau3(criaGrau(dataAtual));
-        graduacao.setGrau4(criaGrau(dataAtual));
-
         switch (grauAtual) {
             case 0:
-                graduacao.setGrau1(criaGrau(adicionarDiasUteis(dataAtual, faixa.getNumeroAulasGrau() -aulasFeitas, aulasPorSemana)));
-                graduacao.setGrau2(criaGrau(adicionarDiasUteis(graduacao.getGrau1().getData(), faixa.getNumeroAulasGrau(), aulasPorSemana)));
-                graduacao.setGrau3(criaGrau(adicionarDiasUteis(graduacao.getGrau2().getData(), faixa.getNumeroAulasGrau(), aulasPorSemana)));
-                graduacao.setGrau4(criaGrau(adicionarDiasUteis(graduacao.getGrau3().getData(), faixa.getNumeroAulasGrau(), aulasPorSemana)));
-                graduacao.setGraduacao(criaGrau(adicionarDiasUteis(graduacao.getGrau4().getData(), faixa.getNumeroAulasGraduacao(), aulasPorSemana)));
+                grau.put("1º grau", criaGrau(adicionarDiasUteis(dataAtual, faixa.getNumeroAulasGrau() -aulasFeitas, aulasPorSemana)));
+                grau.put("2º grau", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"1º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
+                grau.put("3º grau", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"2º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
+                grau.put("4º grau", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"3º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
+                grau.put("Graduação", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"4º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
                 break;
             case 1:
-                graduacao.setGrau2(criaGrau(adicionarDiasUteis(graduacao.getGrau1().getData(), faixa.getNumeroAulasGrau()-aulasFeitas, aulasPorSemana)));
-                graduacao.setGrau3(criaGrau(adicionarDiasUteis(graduacao.getGrau2().getData().plusDays(1), faixa.getNumeroAulasGrau(), aulasPorSemana)));
-                graduacao.setGrau4(criaGrau(adicionarDiasUteis(graduacao.getGrau3().getData().plusDays(1), faixa.getNumeroAulasGrau(), aulasPorSemana)));
-                graduacao.setGraduacao(criaGrau(adicionarDiasUteis(graduacao.getGrau4().getData().plusDays(1), faixa.getNumeroAulasGraduacao(), aulasPorSemana)));
+                grau.put("2º grau", criaGrau(adicionarDiasUteis(dataAtual, faixa.getNumeroAulasGrau() - aulasFeitas, aulasPorSemana)));
+                grau.put("3º grau", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"2º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
+                grau.put("4º grau", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"3º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
+                grau.put("Graduação", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"4º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
                 break;
             case 2:
-                graduacao.setGrau3(criaGrau(adicionarDiasUteis(graduacao.getGrau2().getData(), faixa.getNumeroAulasGrau()-aulasFeitas, aulasPorSemana)));
-                graduacao.setGrau4(criaGrau(adicionarDiasUteis(graduacao.getGrau3().getData().plusDays(1), faixa.getNumeroAulasGrau(), aulasPorSemana)));
-                graduacao.setGraduacao(criaGrau(adicionarDiasUteis(graduacao.getGrau4().getData().plusDays(1), faixa.getNumeroAulasGraduacao(), aulasPorSemana)));
+                grau.put("3º grau", criaGrau(adicionarDiasUteis(dataAtual, faixa.getNumeroAulasGrau() - aulasFeitas, aulasPorSemana)));
+                grau.put("4º grau", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"3º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
+                grau.put("Graduação", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"4º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
                 break;
             case 3:
-                graduacao.setGrau4(criaGrau(adicionarDiasUteis(graduacao.getGrau3().getData(), faixa.getNumeroAulasGrau()-aulasFeitas, aulasPorSemana)));
-                graduacao.setGraduacao(criaGrau(adicionarDiasUteis(graduacao.getGrau4().getData().plusDays(1), faixa.getNumeroAulasGraduacao(), aulasPorSemana)));
+                grau.put("4º grau", criaGrau(adicionarDiasUteis(dataAtual, faixa.getNumeroAulasGrau() - aulasFeitas, aulasPorSemana)));
+                grau.put("Graduação", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"4º grau"), faixa.getNumeroAulasGrau(), aulasPorSemana)));
                 break;
             case 4:
-                graduacao.setGraduacao(criaGrau(adicionarDiasUteis(graduacao.getGrau4().getData(), faixa.getNumeroAulasGraduacao()-aulasFeitas, aulasPorSemana)));
+                grau.put("Graduação", criaGrau(adicionarDiasUteis(dataAtual, faixa.getNumeroAulasGrau() - aulasFeitas, aulasPorSemana)));
                 break;
         }
 
-        graduacao.setGraduacaoPreta(criaGrau(adicionarDiasUteis(graduacao.getGraduacao().getData().plusDays(1), faixa.getTotalAulasFaltantesPreta(grauAtual,aulasFeitas), aulasPorSemana)));
-        graduacao.setGraduacaoCoral(criaGrau(graduacao.getGraduacaoPreta().getData().plusDays(1).plusYears(faixa.anosParaCoral(grauPreta))));
-        graduacao.setGraduacaoVermelha(criaGrau(graduacao.getGraduacaoPreta().getData().plusDays(1).plusYears(faixa.anosParaVermelha(grauPreta))));
+        grau.put("Graduação Preta", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"Graduação").plusDays(1), faixa.getTotalAulasFaltantesPreta(grauAtual,aulasFeitas), aulasPorSemana)));
+
+        if(FaixasEnum.MARROM.equals(faixa)){
+            grau.replace("Graduação Preta", grau.get("Graduação"));
+            grau.remove("Graduação");
+        }
+
+        grau.put("Graduação Coral",criaGrau(this.buscarDataGrau(grau,"Graduação Preta").plusDays(1).plusYears(faixa.anosParaCoral(grauPreta))));
+        grau.put("Graduação Vermelha",criaGrau(this.buscarDataGrau(grau,"Graduação Preta").plusDays(1).plusYears(faixa.anosParaVermelha(grauPreta))));
+
+        if(proxFaixa){
+            grau.remove("Graduação Preta");
+            grau.remove("Graduação Coral");
+            grau.remove("Graduação Vermelha");
+        }
+
+        graduacao.setGrau(arrumaGrauPorData(grau));
     }
 
-    private Graduacao.Grau criaGrau(LocalDate data){
-        Graduacao.Grau grau = new Graduacao.Grau();
+    private Grau criaGrau(LocalDate data){
+        Grau grau = new Grau();
 
         data = dataUtil.pulaFinaisDeSemanaFeriados(data);
         grau.setData(data);
@@ -130,5 +142,24 @@ public class GraduacaoService {
 
         return data;
     }
+
+    private LocalDate buscarDataGrau(Map<String, Grau> graduacao, String grau){
+        return Objects.isNull(graduacao.get(grau)) ? LocalDate.now() : graduacao.get(grau).getData();
+    }
+
+    private static Map<String, Grau> arrumaGrauPorData(Map<String, Grau> unsortedMap) {
+        List<Map.Entry<String, Grau>> list = new LinkedList<>(unsortedMap.entrySet());
+
+        list.sort(Comparator.comparing(entry -> entry.getValue().getData()));
+
+        Map<String, Grau> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<String, Grau> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
+    }
+
+
 
 }

@@ -12,7 +12,7 @@ public enum FaixasEnum {
 
         @Override
         public int getNumeroTotalAulasGraduacao() {
-            return 150;
+            return (this.getNumeroAulasGrau() * 4) + this.getNumeroAulasGraduacao();
         }
 
         @Override
@@ -38,7 +38,7 @@ public enum FaixasEnum {
 
         @Override
         public int getNumeroTotalAulasGraduacao() {
-            return 500;
+            return (this.getNumeroAulasGrau() * 4) + this.getNumeroAulasGraduacao();
         }
 
         @Override
@@ -59,18 +59,18 @@ public enum FaixasEnum {
     ROXA {
         @Override
         public int getNumeroAulasGrau() {
-            return 75;
+            return 85;
         }
 
 
         @Override
         public int getNumeroTotalAulasGraduacao() {
-            return 375;
+            return (this.getNumeroAulasGrau() * 4) + this.getNumeroAulasGraduacao();
         }
 
         @Override
         public int getNumeroAulasGraduacao() {
-            return 75;
+            return 85;
         }
 
         @Override
@@ -86,18 +86,18 @@ public enum FaixasEnum {
     MARROM {
         @Override
         public int getNumeroAulasGrau() {
-            return 50;
+            return 65;
         }
 
 
         @Override
         public int getNumeroTotalAulasGraduacao() {
-            return 250;
+            return (this.getNumeroAulasGrau() * 4) + this.getNumeroAulasGraduacao();
         }
 
         @Override
         public int getNumeroAulasGraduacao() {
-            return 50;
+            return 65;
         }
 
         @Override
@@ -265,8 +265,8 @@ public enum FaixasEnum {
     }
 
     int getAulasProximaFaixa(int grausUsuario, int aulasRealizadas) {
-        int aulasRestantes = this.getNumeroTotalAulasGraduacao() - aulasRealizadas;
-        aulasRestantes -= grausUsuario * this.getNumeroAulasGrau();
+        int aulasRestantes = this.getNumeroTotalAulasGraduacao() - (grausUsuario * this.getNumeroAulasGrau());
+        aulasRestantes -= aulasRealizadas;
 
         return Math.max(aulasRestantes, 0);
     }
