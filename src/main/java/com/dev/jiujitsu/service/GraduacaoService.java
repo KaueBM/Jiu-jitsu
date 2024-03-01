@@ -8,7 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static java.time.LocalDate.now;
 
@@ -37,9 +44,6 @@ public class GraduacaoService {
             Map<String, Grau> grauProximo = new HashMap<>();
             Graduacao graduacaoProxFaixa = preencheGraduacaoResposta(aulasPorSemana, faixaEnum, ultimaGraduacao, grauProximo);
             ultimaGraduacao = graduacaoProxFaixa.buscarDataGrau("Graduação");
-            grauProximo.put("Graduação Preta", graduacaoAtual.getGrau().get("Graduação Preta"));
-            grauProximo.put("Graduação Coral",graduacaoAtual.getGrau().get("Graduação Coral"));
-            grauProximo.put("Graduação Vermelha",graduacaoAtual.getGrau().get("Graduação Vermelha"));
             graduacoes.add(graduacaoProxFaixa);
         }
 
@@ -91,20 +95,16 @@ public class GraduacaoService {
                 break;
         }
 
-        grau.put("Graduação Preta", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"Graduação").plusDays(1), faixa.getTotalAulasFaltantesPreta(grauAtual,aulasFeitas), aulasPorSemana)));
+        if(!proxFaixa){
+            grau.put("Graduação Preta", criaGrau(adicionarDiasUteis(this.buscarDataGrau(grau,"Graduação").plusDays(1), faixa.getTotalAulasFaltantesPreta(grauAtual,aulasFeitas), aulasPorSemana)));
 
-        if(FaixasEnum.MARROM.equals(faixa)){
-            grau.replace("Graduação Preta", grau.get("Graduação"));
-            grau.remove("Graduação");
-        }
+            if(FaixasEnum.MARROM.equals(faixa)){
+                grau.replace("Graduação Preta", grau.get("Graduação"));
+                grau.remove("Graduação");
+            }
 
-        grau.put("Graduação Coral",criaGrau(this.buscarDataGrau(grau,"Graduação Preta").plusDays(1).plusYears(faixa.anosParaCoral(grauPreta))));
-        grau.put("Graduação Vermelha",criaGrau(this.buscarDataGrau(grau,"Graduação Preta").plusDays(1).plusYears(faixa.anosParaVermelha(grauPreta))));
-
-        if(proxFaixa){
-            grau.remove("Graduação Preta");
-            grau.remove("Graduação Coral");
-            grau.remove("Graduação Vermelha");
+            grau.put("Graduação Coral",criaGrau(this.buscarDataGrau(grau,"Graduação Preta").plusDays(1).plusYears(faixa.anosParaCoral(grauPreta))));
+            grau.put("Graduação Vermelha",criaGrau(this.buscarDataGrau(grau,"Graduação Preta").plusDays(1).plusYears(faixa.anosParaVermelha(grauPreta))));
         }
 
         graduacao.setGrau(arrumaGrauPorData(grau));
@@ -127,12 +127,11 @@ public class GraduacaoService {
             if (dataUtil.ehFinalDeSemana(data)) {
                 diaMesmaSemana = 0;
             }
-
             data = dataUtil.pulaFinaisDeSemanaFeriados(data);
             diasAdicionados++;
             diaMesmaSemana++;
 
-            if (diaMesmaSemana == diasUteisPorSemana && dataUtil.diaAdicionadoEhMenor(numeroDias, diasAdicionados)) {
+            if (diaMesmaSemana > diasUteisPorSemana && dataUtil.diaAdicionadoEhMenor(numeroDias, diasAdicionados)) {
                 data = dataUtil.pulaSemanaAposLimite(data);
                 diaMesmaSemana = 0;
             } else if (dataUtil.diaAdicionadoEhMenor(numeroDias, diasAdicionados)) {

@@ -38,8 +38,9 @@ public class FeriadoService {
 
     public boolean ehFeriado(LocalDate data) {
         Feriado feriado = repository.findTopByOrderByDataDesc();
-        if(data.isAfter(feriado.getData())) return false;
-
+        if(data.getYear() > feriado.getData().getYear()){
+            this.salvarFeriados(data.getYear());
+        }
         return !isEmpty(repository.findByData(data));
     }
 
