@@ -1,6 +1,6 @@
 package com.dev.jiujitsu.converter;
 
-import com.dev.jiujitsu.domain.dto.Feriado;
+import com.dev.jiujitsu.domain.entity.Feriado;
 import com.dev.jiujitsu.domain.vo.FeriadosResponse;
 import org.springframework.stereotype.Component;
 
@@ -14,4 +14,5 @@ public class FeriadoConverter {
                 .tipo(response.getTipo())
                 .build();
     }
+
 }
