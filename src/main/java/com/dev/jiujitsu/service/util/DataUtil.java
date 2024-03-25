@@ -4,14 +4,13 @@ import com.dev.jiujitsu.domain.dto.DiasLivres;
 import com.dev.jiujitsu.domain.entity.Feriado;
 import com.dev.jiujitsu.domain.entity.Recesso;
 import com.dev.jiujitsu.repository.FeriadoRepository;
-import com.dev.jiujitsu.repository.RecessoRepository;
 import com.dev.jiujitsu.service.FeriadoService;
-import com.dev.jiujitsu.service.RecessoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,13 +25,7 @@ public class DataUtil {
     private FeriadoService feriadoService;
 
     @Autowired
-    private RecessoService recessoService;
-
-    @Autowired
     private FeriadoRepository feriadoRepository;
-
-    @Autowired
-    private RecessoRepository recessoRepository;
 
     public boolean diaAdicionadoEhMenor(int numeroDias, int diasAdicionados) {
         return diasAdicionados < numeroDias;
@@ -60,7 +53,8 @@ public class DataUtil {
     }
 
     public LocalDate pulaFinaisDeSemanaFeriadosRecessos(LocalDate data) {
-        if (ehFinalDeSemana(data) || feriadoService.ehFeriado(data) || recessoService.ehRecesso(data)) {
+        //|| recessoService.ehRecesso(data)
+        if (ehFinalDeSemana(data) || feriadoService.ehFeriado(data)) {
             data = pularParaProximoDiaUtil(data);
         }
         return data;
@@ -82,7 +76,8 @@ public class DataUtil {
         LocalDate fimAno = LocalDate.of(ano, 12, 31);
 
         List<Feriado> feriados = feriadoRepository.buscarFeriadoPorAno(inicioAno, fimAno);
-        List<Recesso> recessos = recessoRepository.buscarRecessoPorAno(inicioAno, fimAno);
+        //List<Recesso> recessos = recessoRepository.buscarRecessoPorAno(inicioAno, fimAno);
+        List<Recesso> recessos = new ArrayList<>();
         List<LocalDate> listaDeDatasLivres = obtemListaDeDatas(feriados, recessos);
 
         int maximoDeDiasLivresConsecutivos = 0;
@@ -128,6 +123,53 @@ public class DataUtil {
         return Stream.concat(datasFeriados.stream(), datasRecessos.stream())
                 .sorted(Comparator.naturalOrder())
                 .collect(Collectors.toList());
+    }
+
+    public List<DayOfWeek> obterDiasDaSemana(List<String> diasDaSemana) {
+        List<DayOfWeek> daysOfWeekList = new ArrayList<>();
+
+        for (String diaSemana : diasDaSemana) {
+            DayOfWeek dayOfWeek = converterDiaSemana(diaSemana);
+            if (dayOfWeek != null) {
+                daysOfWeekList.add(dayOfWeek);
+            }
+        }
+
+        return daysOfWeekList;
+    }
+
+    private DayOfWeek converterDiaSemana(String diaSemana) {
+        return switch (diaSemana.toLowerCase()) {
+            case "domingo" -> DayOfWeek.SUNDAY;
+            case "segunda" -> DayOfWeek.MONDAY;
+            case "terça" -> DayOfWeek.TUESDAY;
+            case "quarta" -> DayOfWeek.WEDNESDAY;
+            case "quinta" -> DayOfWeek.THURSDAY;
+            case "sexta" -> DayOfWeek.FRIDAY;
+            case "sábado" -> DayOfWeek.SATURDAY;
+            default -> null;
+        };
+    }
+
+    public LocalDate ajustaParaDiaDeAulaDoAluno(LocalDate data, int diasDeAulasPorSemana, List<DayOfWeek> diasDasAulas) {
+        if(diasDeAulasPorSemana != 5){
+            data = ajustarDataParaAulaDoAluno(data, diasDasAulas);
+        }
+        return data;
+    }
+
+    private LocalDate ajustarDataParaAulaDoAluno(LocalDate originalDate, List<DayOfWeek> diaAulaAluno) {
+        DayOfWeek originalDayOfWeek = originalDate.getDayOfWeek();
+
+        if (!diaAulaAluno.contains(originalDayOfWeek)) {
+            for (int i = 1; i <= 7; i++) {
+                LocalDate newDate = originalDate.plusDays(i);
+                if (diaAulaAluno.contains(newDate.getDayOfWeek())) {
+                    return newDate;
+                }
+            }
+        }
+        return originalDate;
     }
 
 }

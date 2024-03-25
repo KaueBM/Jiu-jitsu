@@ -1,13 +1,14 @@
 package com.dev.jiujitsu.controller;
 
 import com.dev.jiujitsu.domain.dto.GraduacaoDTO;
+import com.dev.jiujitsu.domain.vo.GraduacaoRequest;
 import com.dev.jiujitsu.service.GraduacaoService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public class GraduacaoController {
 
     @GetMapping
     @ApiOperation("Busca a data de graduação dos graus da faixa atual até a preta.")
-    public ResponseEntity<List<GraduacaoDTO>> buscaDataGraduacoes(@RequestParam String faixa, @RequestParam int aulasPorSemana, @RequestParam int aulasFeitas, @RequestParam int grausRecebidos) {
-        List<GraduacaoDTO> graduacoes = graduacaoService.buscarDatasGraduacoes(faixa, aulasPorSemana, aulasFeitas, grausRecebidos);
+    public ResponseEntity<List<GraduacaoDTO>> buscaDataGraduacoes(@RequestBody GraduacaoRequest request) {
+        List<GraduacaoDTO> graduacoes = graduacaoService.buscarDatasGraduacoes(request);
         return ResponseEntity.ok(graduacoes);
     }
 
