@@ -44,4 +44,7 @@ public class FeriadoService {
         return !isEmpty(repository.findByData(data));
     }
 
+    public void removerFeriados(String id) {
+        repository.deleteById(id);
+    }
 }
