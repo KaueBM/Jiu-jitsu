@@ -1,11 +1,13 @@
 package com.dev.jiujitsu.controller;
 
+import com.dev.jiujitsu.domain.request.FeriadoRequest;
 import com.dev.jiujitsu.service.FeriadoService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +22,7 @@ public class FeriadoController {
 
     @PostMapping
     @ApiOperation("Salva todos os feriados do ano")
-    public ResponseEntity buscaDataGraduacoes(@RequestParam int ano) {
+    public ResponseEntity salvarFeriados(@RequestParam int ano) {
         feriadoService.salvarFeriados(ano);
         return ResponseEntity.ok().build();
     }
@@ -31,4 +33,12 @@ public class FeriadoController {
         feriadoService.removerFeriados(id);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/periodo")
+    @ApiOperation("Salva o feriado por periodo")
+    public ResponseEntity salvaFeriadoPorPeriodo(@RequestBody FeriadoRequest request) {
+        feriadoService.salvaFeriadoPorPeriodo(request);
+        return ResponseEntity.ok().build();
+    }
+
 }

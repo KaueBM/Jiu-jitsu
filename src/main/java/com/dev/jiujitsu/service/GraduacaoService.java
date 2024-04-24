@@ -119,6 +119,11 @@ public class GraduacaoService {
             grau.put("Graduação Vermelha",criaGrau(this.buscarDataGrau(grau,GRADUACAO_PRETA).plusDays(1).plusYears(faixa.anosParaVermelha(grauPreta))));
         }
 
+        if(FaixasEnum.MARROM.equals(faixa)){
+            grau.replace(GRADUACAO_PRETA, grau.get(GRADUACAO));
+            grau.remove(GRADUACAO);
+        }
+
         graduacao.setGrau(arrumaGrauPorData(grau));
     }
 
@@ -149,7 +154,5 @@ public class GraduacaoService {
 
         return sortedMap;
     }
-
-
 
 }
