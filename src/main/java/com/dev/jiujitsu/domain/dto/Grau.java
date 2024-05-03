@@ -7,8 +7,13 @@ import java.time.LocalDate;
 
 @Data
 public class Grau {
-    @JsonFormat(pattern="dd/MM/yyyy")
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate data;
     private String diaDaSemana;
+
+    public Grau(LocalDate data, String diaDaSemana) {
+        this.data = data;
+        this.diaDaSemana = diaDaSemana;
+    }
 
 }
