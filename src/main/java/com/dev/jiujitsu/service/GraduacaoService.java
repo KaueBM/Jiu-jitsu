@@ -41,24 +41,15 @@ public class GraduacaoService {
         int aulasFeitas = request.getAulasFeitas();
         int grausRecebidos = request.getGrausRecebidos();
         FaixasEnum faixaAtual = FaixasEnum.obterFaixaPorNome(faixa);
-        int aulasGraduacao = faixaAtual.getAulasRestantesParaProximaFaixa(grausRecebidos, aulasFeitas);
-        LocalDate dataGraduacao = dataUtil.adicionarDiasUteis(now(), aulasGraduacao, aulasPorSemana);
-
         List<Graduacao> graduacoes = new ArrayList<>();
-        Map<String, Grau> grauAtual = new HashMap<>();
 
-        Graduacao graduacaoAtual = new Graduacao();
-        graduacaoAtual.setFaixa(faixaAtual);
-        graduacaoAtual.setAulasProxFaixa(aulasGraduacao);
-        graduacaoAtual.setAulasParaPreta(faixaAtual.getTotalAulasFaltantesPreta(grausRecebidos, aulasFeitas));
-        this.preencherDatas(graduacaoAtual, now(), grausRecebidos, aulasFeitas, aulasPorSemana, grauAtual, false);
+        Graduacao graduacaoAtual = preencheGraduacaoResposta(aulasPorSemana, faixaAtual, now(), false, grausRecebidos, aulasFeitas);
         graduacoes.add(graduacaoAtual);
 
-        LocalDate ultimaGraduacao = dataGraduacao;
-        List<FaixasEnum> faixasRestantes = faixaAtual.buscaListaFaixasQueFaltam(faixa);
+        LocalDate ultimaGraduacao = graduacaoAtual.buscarDataGrau(GRADUACAO);
 
-        for (FaixasEnum faixaEnum : faixasRestantes) {
-            Graduacao graduacaoProxFaixa = preencheGraduacaoResposta(aulasPorSemana, faixaEnum, ultimaGraduacao, grauAtual);
+        for (FaixasEnum faixaEnum : faixaAtual.buscaListaFaixasQueFaltam(faixa)) {
+            Graduacao graduacaoProxFaixa = preencheGraduacaoResposta(aulasPorSemana, faixaEnum, ultimaGraduacao, true, 0, 0);
             ultimaGraduacao = graduacaoProxFaixa.buscarDataGrau(GRADUACAO);
             graduacoes.add(graduacaoProxFaixa);
         }
@@ -66,21 +57,20 @@ public class GraduacaoService {
         return graduacoes;
     }
 
-    private Graduacao preencheGraduacaoResposta(int aulasPorSemana, FaixasEnum faixaEnum, LocalDate ultimaGraduacao, Map<String, Grau> grau) {
-        LocalDate graduacaoProxFaixa = dataUtil.adicionarDiasUteis(ultimaGraduacao, faixaEnum.getNumeroTotalAulasGraduacao(), aulasPorSemana);
-        Grau proximoGrau = criaGrau(graduacaoProxFaixa);
-        grau.put(GRADUACAO, proximoGrau);
+    private Graduacao preencheGraduacaoResposta(int aulasPorSemana, FaixasEnum faixa, LocalDate ultimaGraduacao, boolean proxFaixa, int grausRecebidos, int aulasFeitas) {
+        grausRecebidos = proxFaixa ? 0 : grausRecebidos;
+        aulasFeitas = proxFaixa ? 0 : aulasFeitas;
+        Graduacao graduacao = new Graduacao();
+        graduacao.setFaixa(faixa);
+        graduacao.setAulasProxFaixa(faixa.getAulasRestantesParaProximaFaixa(grausRecebidos, aulasFeitas));
+        graduacao.setAulasParaPreta(faixa.getTotalAulasFaltantesPreta(grausRecebidos, aulasFeitas));
+        this.preencherDatas(graduacao, ultimaGraduacao, grausRecebidos, aulasFeitas, aulasPorSemana, proxFaixa);
 
-        Graduacao graduacaoFaltante = new Graduacao();
-        graduacaoFaltante.setFaixa(faixaEnum);
-        graduacaoFaltante.setAulasProxFaixa(faixaEnum.getNumeroTotalAulasGraduacao());
-        graduacaoFaltante.setAulasParaPreta(faixaEnum.getTotalAulasFaltantesPreta(0, 0));
-        this.preencherDatas(graduacaoFaltante, ultimaGraduacao, 0, 0, aulasPorSemana, grau, true);
-
-        return graduacaoFaltante;
+        return graduacao;
     }
 
-    private void preencherDatas(Graduacao graduacao, LocalDate dataAtual, int grauAtual, int aulasFeitas, int aulasPorSemana, Map<String, Grau> grau, boolean proxFaixa) {
+    private void preencherDatas(Graduacao graduacao, LocalDate dataAtual, int grauAtual, int aulasFeitas, int aulasPorSemana, boolean proxFaixa) {
+        Map<String, Grau> grau = new HashMap<>();
         FaixasEnum faixa = graduacao.getFaixa();
         int grauPreta = FaixasEnum.ehPreta(faixa) ? grauAtual : 0;
 
